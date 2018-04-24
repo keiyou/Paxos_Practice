@@ -133,12 +133,31 @@ void VoteServer::recv_synchronize_message(){
 }
 
 
-void VoteServer::recv_message(int fd);
+void VoteServer::recv_message(int recvfd);
 
-int VoteServer::synchronize_log(int siteNumber, vector<Event> l);
+int VoteServer::synchronize_log(int siteNumber, vector<Event> l){
+    logLock.lock();
+    for(int i = 0; i < l.size(); i++){
+        log[sizeNumber].append(l[i]);
+        voteTo(l[i].get_vote());
+    }
+    logLock.unlock();
+}
 
-
-void VoteServer::collect_garbage();
+void VoteServer::collect_garbage(){
+    logLock.lock();
+    for(int i = 0; i < log.size(); i++){
+        int ti = all_known_time(i);
+        vector<event> temp = log[i];
+        vector<event>::iterator it = temp.begin()
+        while(it != temp.end()){
+            if(it->time > ti)
+                break;
+            temp.erase(it);
+        }
+    }
+    logLock.unlock();
+}
 
 
 
@@ -185,7 +204,6 @@ void voteTo(Candidate c){
 
 
 void VoteServer::start_server(){
-
     thread recv_thread (recv_synchronize_message, this->config_file);
 
     int choice = -1

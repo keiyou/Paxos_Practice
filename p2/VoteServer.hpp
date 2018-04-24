@@ -38,7 +38,7 @@ private:
 
     void send_synchronize_message();
     void recv_synchronize_message();
-    void recv_message(int fd);
+    void recv_message(int recvfd);
 
     void print_dict();
     void print_log();
