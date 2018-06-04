@@ -134,7 +134,7 @@ void Server::read_network_config(std::string filename){
         cnt++;
     }
 
-    assert(cnt == this->networkSize);
+    // assert(cnt == this->networkSize);
 
     if(settings::DEBUG_FLAG)
         printf("DEBUG: Network Configuration Read\n");
