@@ -4,7 +4,7 @@ CXXFLAGS=-g -std=c++11 -Wall -pedantic
 objects = main.o Server.o BankServer.o  ServerDecorator.o PaxosDecorator.o Operation.o BankServerInterface.o Utility.o PaxosUtility.o
 
 server: $(objects)
-	$(CXX) -o server $(CXXFLAGS) $(objects)
+	$(CXX) -pthread -o server $(CXXFLAGS) $(objects)
 
 main.o: main.cpp Server.hpp BankServer.hpp PaxosDecorator.hpp BankServerInterface.hpp Utility.hpp
 	$(CXX) -c $(CXXFLAGS) main.cpp
