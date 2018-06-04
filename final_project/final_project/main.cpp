@@ -16,6 +16,8 @@
 
 int main(int argc, const char * argv[]) {
 
+    srand(time(NULL));
+
     BankServer *server = new BankServer(0, utility::NETWORK_SIZE, utility::NET_CONFIG_FILE, utility::INITIAL_BALANCE);
     PaxosDecorator *paxos = new PaxosDecorator(server, utility::REQUEST_QUEUE_SIZE);
     BankServerInferface interface(server, paxos);
