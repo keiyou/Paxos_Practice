@@ -507,7 +507,6 @@ void PaxosDecorator::process_helper(std::string msgType, std::string msg){
     if(msgType == "Paxos_Decision"){
         std::lock_guard<std::mutex> lk(this->idle);
         this->learner_learn(msg);
-        std::cout << "TXxXXXXXXXXXXXX" << std::endl;
         return;
     }
     if(msgType == "Paxos_Recovery_Request"){
