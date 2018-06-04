@@ -195,8 +195,6 @@ void Server::send_message(int site, std::string msg){
     memset(&serverAddr, 0, sizeof(serverAddr));
     serverAddr.sin_family = AF_INET;
 
-    std::cout <<( this->networkConfigs)[site].ip.c_str() << std::endl;
-
     serverAddr.sin_port = htons((this->networkConfigs)[site].port);
     serverAddr.sin_addr.s_addr = inet_addr((this->networkConfigs)[site].ip.c_str());
 

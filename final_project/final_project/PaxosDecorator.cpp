@@ -340,11 +340,8 @@ void PaxosDecorator::learner_learn(std::string msg){
     for(std::vector<Operation*>::iterator it = val.begin(); it != val.end(); it++){
         (*it)->assign_server(this->server);
         (*it)->execute();
-
         if(settings::DEBUG_FLAG)
             printf("\tDEBUG: %s\n", (*it)->to_string().c_str());
-
-        delete *it;
     }
 
     this->blockChain->append(val);
@@ -358,7 +355,6 @@ void PaxosDecorator::learner_learn(std::string msg){
 
 
 void PaxosDecorator::save_block(){
-    std::lock_guard<std::mutex> lk(this->idle);
     if(settings::DEBUG_FLAG)
         printf("DEBUG: Save BlockChain\n");
     std::ofstream myfile;
@@ -368,7 +364,6 @@ void PaxosDecorator::save_block(){
 }
 
 void PaxosDecorator::load_block(){
-    std::lock_guard<std::mutex> lk(this->idle);
     std::ifstream myfile;
     std::string str;
     myfile.open(settings::B_SAVE_FILE);
