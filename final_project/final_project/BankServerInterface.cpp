@@ -69,7 +69,7 @@ void BankServerInferface::process_helper(std::string str){
         TransferOperation* op = new TransferOperation(this->server, this->server->get_site_number(), creditNode, amount);
         int err = this->paxos->new_request(op);
         if(err == 1){
-            std::cout << "--- Warning: Network Unavaibale, Request Not Accepted\n" << std::endl;
+            std::cout << "--- Warning: Network Unavaibale\n" << std::endl;
         }
         return;
     }

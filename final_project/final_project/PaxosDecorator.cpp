@@ -36,6 +36,8 @@ PaxosDecorator::PaxosDecorator(Server* s, int size): ServerDecorator(s){
     this->accepted = false;
     this->prop = false;
 
+    this->load_request_queue();
+
     if(settings::DEBUG_FLAG)
         printf("DEBUG: Construct Paxos Decorator\n");
 }
@@ -140,9 +142,6 @@ void PaxosDecorator::proposer_prepare(){
 }
 
 void PaxosDecorator::accepter_ack(std::string msg){
-    if(settings::DEBUG_FLAG)
-        printf("DEBUG: Paxos Accepter Receive Prepare\n");
-
     boost::property_tree::ptree pt;
     std::stringstream ss(msg);
     try{
@@ -156,10 +155,14 @@ void PaxosDecorator::accepter_ack(std::string msg){
     int site = std::stoi(pt.get<std::string>("Site"));
     std::tuple<int,int,int> bal = tuple_from_json(pt.get<std::string>("BallotNum"));
 
+    if(settings::DEBUG_FLAG)
+        printf("DEBUG: Paxos Accepter Receive Prepare From Site:%d\n", site);
+
     if(compare(this->ballotNum, bal)){
         this->ballotNum = bal;
         boost::property_tree::ptree root;
         root.put("MessageType", "Paxos_Ack");
+        root.put("Site", this->server->get_site_number());
         root.put("BallotNum", tuple_to_json(bal));
         root.put("AcceptNum", tuple_to_json(this->acceptNum));
         if(this->acceptVal.empty()){
@@ -182,9 +185,6 @@ void PaxosDecorator::accepter_ack(std::string msg){
 }
 
 void PaxosDecorator::proposer_accept(std::string msg){
-    if(settings::DEBUG_FLAG)
-        printf("DEBUG: Paxos Proposer Receive Ack\n");
-
     boost::property_tree::ptree pt;
     std::stringstream ss(msg);
     try{
@@ -195,7 +195,12 @@ void PaxosDecorator::proposer_accept(std::string msg){
         exit(1);
     }
 
+    int site = std::stoi(pt.get<std::string>("Site"));
     std::string receivedVal = pt.get<std::string>("AcceptVal");
+
+    if(settings::DEBUG_FLAG)
+        printf("DEBUG: Paxos Proposer Receive Ack From Site %d\n", site);
+
     if(receivedVal != ""){
         if(settings::DEBUG_FLAG)
             printf("DEBUG: Paxos Proposer AcceptVal Not Empty!\n");
@@ -235,9 +240,6 @@ void PaxosDecorator::proposer_accept(std::string msg){
 }
 
 void PaxosDecorator::accepter_accepted(std::string msg){
-    if(settings::DEBUG_FLAG)
-        printf("DEBUG: Paxos Accepter Receive Accept\n");
-
     boost::property_tree::ptree pt;
     std::stringstream ss(msg);
     try{
@@ -251,6 +253,9 @@ void PaxosDecorator::accepter_accepted(std::string msg){
     int site = std::stoi(pt.get<std::string>("Site"));
     std::tuple<int,int,int> b = tuple_from_json(pt.get<std::string>("BallotNum"));
 
+    if(settings::DEBUG_FLAG)
+        printf("DEBUG: Paxos Accepter Receive Accept From Site %d\n", site);
+
     if(compare(this->ballotNum, b)){
         for(std::vector<Operation*>::iterator it = acceptVal.begin(); it != acceptVal.end(); it++){
             delete *it;
@@ -261,6 +266,7 @@ void PaxosDecorator::accepter_accepted(std::string msg){
 
         boost::property_tree::ptree root;
         root.put("MessageType", "Paxos_Accepted");
+        root.put("Site", this->server->get_site_number());
         root.put("AcceptNum", tuple_to_json(this->acceptNum));
         root.put("AcceptVal", vector_to_json(this->acceptVal));
 
@@ -279,10 +285,21 @@ void PaxosDecorator::accepter_accepted(std::string msg){
 
 
 void PaxosDecorator::proposer_decision(std::string msg){
+    boost::property_tree::ptree pt;
+    std::stringstream ss(msg);
+    try{
+        read_json(ss,pt);
+    } catch (boost::property_tree::ptree_error &e){
+        if(settings::DEBUG_FLAG)
+            printf("DEBUG: Accepter Json Parse Failed\n");
+        exit(1);
+    }
+
+    int site = std::stoi(pt.get<std::string>("Site"));
     // to do: add assertions
 
     if(settings::DEBUG_FLAG)
-        printf("DEBUG: Paxos Proposer Receive Accepted\n");
+        printf("DEBUG: Paxos Proposer Receive Accepted From Site %d\n", site);
 
     this->accepts++;
     if(!accepted && this->accepts >= (this->server->get_network_size()/2+1)){
@@ -293,6 +310,7 @@ void PaxosDecorator::proposer_decision(std::string msg){
 
         boost::property_tree::ptree root;
         root.put("MessageType", "Paxos_Decision");
+        root.put("Site", this->server->get_site_number());
         root.put("AcceptNum", tuple_to_json(this->ballotNum));
         root.put("AcceptVal", vector_to_json(this->myVal));
 
@@ -315,12 +333,6 @@ void PaxosDecorator::proposer_decision(std::string msg){
 }
 
 void PaxosDecorator::learner_learn(std::string msg){
-    if(settings::DEBUG_FLAG)
-        printf("DEBUG: Paxos Learner Receive Decision\n");
-
-    this->acceptNum = std::make_tuple(0,0,0);
-    this->acceptVal = std::vector<Operation*>();
-
     boost::property_tree::ptree pt;
     std::stringstream ss(msg);
     try{
@@ -330,6 +342,12 @@ void PaxosDecorator::learner_learn(std::string msg){
             printf("DEBUG: Learner Json Parse Failed\n");
         exit(1);
     }
+
+    int site = std::stoi(pt.get<std::string>("Site"));
+
+    if(settings::DEBUG_FLAG)
+        printf("DEBUG: Paxos Learner Receive Decision From Site %d\n", site);
+
 
     std::tuple<int,int,int> b = tuple_from_json(pt.get<std::string>("AcceptNum"));
     if(std::get<2>(b) < this->blockChain->get_size()){
@@ -351,6 +369,8 @@ void PaxosDecorator::learner_learn(std::string msg){
     if(settings::DEBUG_FLAG)
         printf("DEBUG: New Block Appended\n");
 
+    this->acceptNum = std::make_tuple(0,0,0);
+    this->acceptVal = std::vector<Operation*>();
     this->prop = false;
     this->prop_cv.notify_one();
 }
@@ -420,9 +440,6 @@ void PaxosDecorator::request_recovery(){
 }
 
 void PaxosDecorator::send_recovery(std::string msg){
-    if(settings::DEBUG_FLAG)
-        printf("DEBUG: Receive Request Recovery\n");
-
     boost::property_tree::ptree pt;
     std::stringstream ss(msg);
     try{
@@ -433,6 +450,9 @@ void PaxosDecorator::send_recovery(std::string msg){
         exit(1);
     }
     int site = std::stoi(pt.get<std::string>("site"));
+
+    if(settings::DEBUG_FLAG)
+        printf("DEBUG: Receive Request Recovery From Site %d\n", site);
 
     boost::property_tree::ptree root;
     root.put("MessageType", "Paxos_Recovery");
@@ -533,7 +553,6 @@ void PaxosDecorator::start_server(Server* s){
     std::thread newThread (&PaxosDecorator::queue_check_thread, this);
     newThread.detach();
     this->load_block();
-    this->load_request_queue();
 
     if(settings::DEBUG_FLAG)
         printf("DEBUG: Paxos Started\n");

@@ -140,6 +140,8 @@ void Server::read_network_config(std::string filename){
         printf("DEBUG: Network Configuration Read\n");
 }
 
+/* public interfaces */
+
 Server::Server(){};
 
 Server::Server(Server* s){
@@ -147,23 +149,14 @@ Server::Server(Server* s){
     this->networkSize = s->networkSize;
 }
 
-/* public interfaces */
 Server::Server(int siteNumber, int networkSize, std::string configFile){
     this->siteNumber = siteNumber;
     this->networkSize = networkSize;
+    this->netFlags = std::vector<bool> (this->networkSize, false);
     this->read_network_config(configFile);
 
     if(settings::DEBUG_FLAG)
         printf("DEBUG: Construct Server\n");
-}
-
-void Server::start_server(Server* s){
-    this->networkStatus = true;
-    std::thread newThread (&Server::listen_thread, s);
-    newThread.detach();
-
-    if(settings::DEBUG_FLAG)
-        printf("DEBUG: Server Started\n");
 }
 
 Server::~Server(){
@@ -171,16 +164,39 @@ Server::~Server(){
         printf("DEBUG: Deconstruct Server\n");
 };
 
+
+void Server::start_server(Server* s){
+    this->networkStatus = true;
+    std::thread newThread (&Server::listen_thread, s);
+    newThread.detach();
+
+    for(int i = 0; i < this->networkSize; i++){
+        netFlags = true;
+    }
+
+    if(settings::DEBUG_FLAG)
+        printf("DEBUG: Server Started\n");
+}
+
 void Server::shut_down_server(){
     this->networkStatus = false;
     this->shutDownFlag = true;
     send_message(siteNumber, "{\"MessageType:\" : \"ShutDown\"}");
+
+    for(int i = 0; i < this->networkSize; i++){
+        netFlags = false;
+    }
 
     if(settings::DEBUG_FLAG)
         printf("DEBUG: Server Shut Down\n");
 }
 
 void Server::send_message(int site, std::string msg){
+
+    if(!this->netFlags[site]){
+        printf("Failed to Connect to the Server %d\n", site);
+    }
+
     int sockfd = -1;
     char buf[settings::BUFFER_SIZE];
 
@@ -219,7 +235,7 @@ void Server::send_message(int site, std::string msg){
     }
 
     if(settings::DEBUG_FLAG)
-        printf("DEBUG: MESSAGE SENT: %s\n", msg.c_str());
+        printf("DEBUG: MESSAGE SENT: \n\t%s\n", msg.c_str());
 
     close(sockfd);
 }
@@ -243,4 +259,21 @@ int Server::get_site_number(){
 
 bool Server::get_network_status(){
    return networkStatus;
+}
+
+
+void Server::net_up(int i){
+    this->netFlags[i] = true;
+    for(int i = 0; i < this->networkSize; i++){
+        std::cout << netFlags[i] << " ";
+    }
+    std::cout << std::endl;
+}
+
+void Server::net_down(int i){
+    this->netFlags[i] = false;
+    for(int i = 0; i < this->networkSize; i++){
+        std::cout << netFlags[i] << " ";
+    }
+    std::cout << std::endl;
 }

@@ -21,6 +21,8 @@ struct NetworkConfig{
 
 class Server{
 private:
+    std::vector<bool> netFlags;
+
     void listen_thread();
     void read_network_config(std::string filename);
     void listen_helper(int fd);
@@ -44,6 +46,9 @@ public:
     int get_site_number();
     int get_network_size();
     bool get_network_status();
+
+    void net_up(int i);
+    void net_down(int i);
 
     void send_message(int site, std::string msg);
     void broadcast(std::string msg);
