@@ -99,7 +99,9 @@ void PaxosDecorator::queue_check_thread(){
 
         this->highestNum = std::make_tuple(0,0,0);
         this->acks = 0;
-        this->accepted = 0;
+        this->acked = false;
+        this->accepts = 0;
+        this->accepted = false;
         this->prop = true;
 
         if(settings::DEBUG_FLAG)
