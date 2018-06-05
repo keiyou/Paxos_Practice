@@ -194,7 +194,7 @@ void Server::shut_down_server(){
 void Server::send_message(int site, std::string msg){
 
     if(!this->netFlags[site]){
-        printf("Failed to Connect to the Server %d\n", site);
+        printf("DEBUG: Failed to Connect to the Server %d\n", site);
     }
 
     int sockfd = -1;

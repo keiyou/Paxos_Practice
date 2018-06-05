@@ -433,10 +433,11 @@ void PaxosDecorator::request_recovery(){
     std::stringstream s;
     boost::property_tree::write_json(s, root, false);
     std::string request = s.str();
-    this->server->broadcast(request);
 
     if(settings::DEBUG_FLAG)
-        printf("DEBUG: Send Request Recovery\n");
+        printf("DEBUG: Broadcast Request Recovery\n");
+
+    this->server->broadcast(request);
 }
 
 void PaxosDecorator::send_recovery(std::string msg){
@@ -449,7 +450,7 @@ void PaxosDecorator::send_recovery(std::string msg){
             printf("DEBUG: Request Json Parse Failed\n");
         exit(1);
     }
-    int site = std::stoi(pt.get<std::string>("site"));
+    int site = std::stoi(pt.get<std::string>("Site"));
 
     if(settings::DEBUG_FLAG)
         printf("DEBUG: Receive Request Recovery From Site %d\n", site);
