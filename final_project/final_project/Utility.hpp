@@ -23,7 +23,7 @@ namespace settings{
 
 namespace utility{
     const std::string SERVER_NAME[5] = {"A","B","C","D","E"};
-    const int NETWORK_SIZE = 3;
+    const int NETWORK_SIZE = 5;
     const int REQUEST_QUEUE_SIZE = 10;
     const int INITIAL_BALANCE = 100;
     const std::string NET_CONFIG_FILE = "netconfig.txt";
