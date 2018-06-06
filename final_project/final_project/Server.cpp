@@ -80,6 +80,8 @@ void Server::listen_thread(){
         newThread.detach();
     }
 
+    close(sockfd);
+
     if(settings::DEBUG_FLAG)
         printf("DEBUG: Listen Tread Exit\n");
 }
@@ -106,7 +108,10 @@ void Server::listen_helper(int fd){
 }
 
 void Server::process_helper(std::string msgType, std::string msg){
-    if(msgType == "ShutDown"){return;}
+    if(msgType == "ShutDown"){
+        std::cout << "DEBUG"  << std::endl;
+        return;
+    }
     printf("Unknown Message Received! Check Message Format!\n");
 }
 
@@ -171,7 +176,7 @@ void Server::start_server(Server* s){
     newThread.detach();
 
     for(int i = 0; i < this->networkSize; i++){
-        netFlags = true;
+        netFlags[i] = true;
     }
 
     if(settings::DEBUG_FLAG)
@@ -181,10 +186,10 @@ void Server::start_server(Server* s){
 void Server::shut_down_server(){
     this->networkStatus = false;
     this->shutDownFlag = true;
-    send_message(siteNumber, "{\"MessageType:\" : \"ShutDown\"}");
+    send_message(siteNumber, "{\"MessageType\" : \"ShutDown\"}");
 
     for(int i = 0; i < this->networkSize; i++){
-        netFlags = false;
+        netFlags[i] = false;
     }
 
     if(settings::DEBUG_FLAG)
@@ -195,6 +200,7 @@ void Server::send_message(int site, std::string msg){
 
     if(!this->netFlags[site]){
         printf("DEBUG: Failed to Connect to the Server %d\n", site);
+        return;
     }
 
     int sockfd = -1;
@@ -244,7 +250,8 @@ void Server::broadcast(std::string msg){
     if(settings::DEBUG_FLAG)
         printf("DEBUG: BROADCAST\n");
     for(int i = 0; i < this->networkSize; i++){
-        this->send_message(i, msg);
+        std::thread newThread (&Server::send_message, this, i, msg);
+        newThread.detach();
     }
 }
 

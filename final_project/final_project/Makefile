@@ -6,6 +6,14 @@ objects = main.o Server.o BankServer.o  ServerDecorator.o PaxosDecorator.o Opera
 server: $(objects)
 	$(CXX) -pthread -o server $(CXXFLAGS) $(objects)
 
+all: server server1 server2
+
+server1: main1.o Server.o BankServer.o  ServerDecorator.o PaxosDecorator.o Operation.o BankServerInterface.o Utility.o PaxosUtility.o
+	$(CXX) -pthread -o server1 main1.o Server.o BankServer.o  ServerDecorator.o PaxosDecorator.o Operation.o BankServerInterface.o Utility.o PaxosUtility.o
+
+server2: main2.o Server.o BankServer.o  ServerDecorator.o PaxosDecorator.o Operation.o BankServerInterface.o Utility.o PaxosUtility.o
+	$(CXX) -pthread -o server2 main2.o Server.o BankServer.o  ServerDecorator.o PaxosDecorator.o Operation.o BankServerInterface.o Utility.o PaxosUtility.o
+
 main.o: main.cpp Server.hpp BankServer.hpp PaxosDecorator.hpp BankServerInterface.hpp Utility.hpp
 	$(CXX) -c $(CXXFLAGS) main.cpp
 

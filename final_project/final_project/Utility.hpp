@@ -15,7 +15,7 @@
 namespace settings{
     extern bool DEBUG_FLAG;
     const int SIMULATE_DELAY = 3;
-    const int RANDOM_DELAY_RANGE = 12;
+    const int RANDOM_DELAY_RANGE = 9;
     const int BUFFER_SIZE = 2048;
     const std::string B_SAVE_FILE = "saved_block.txt";
     const std::string Q_SAVE_FILE = "saved_queue.txt";

@@ -106,10 +106,9 @@ void PaxosDecorator::queue_check_thread(){
         this->accepted = false;
         this->prop = true;
 
+        std::lock_guard<std::mutex> lk(this->idle);
         if(settings::DEBUG_FLAG)
             printf("DEBUG: Start New Proposal\n");
-
-        std::lock_guard<std::mutex> lk(this->idle);
         this->proposer_prepare();
     }
 
@@ -392,7 +391,10 @@ void PaxosDecorator::load_block(){
     if(myfile.is_open()){
         if(getline(myfile, str)){
             if(str == "1")
+                std::lock_guard<std::mutex> lk(this->idle);
                 this->request_recovery();
+                std::unique_lock<std::mutex> ulk(this->proposing);
+                this->recover_cv.wait(ulk);
         }
         myfile.close();
     }
@@ -457,6 +459,7 @@ void PaxosDecorator::send_recovery(std::string msg){
 
     boost::property_tree::ptree root;
     root.put("MessageType", "Paxos_Recovery");
+    root.put("BallotNum", tuple_to_json(this->ballotNum));
     root.put("BlockChain", chain_to_json(this->blockChain));
     std::stringstream s;
     boost::property_tree::write_json(s, root, false);
@@ -492,17 +495,24 @@ void PaxosDecorator::receive_recovery(std::string msg){
             }
         }
         this->blockChain = b;
-    }
 
-    Block<std::vector<Operation*>>* iterator = this->blockChain->get_head();
-    for(int i = 0; i < tempSize; i++){
-        iterator = iterator->next;
-    }
-    while(iterator != NULL){
-        for(std::vector<Operation*>::iterator it = iterator->val.begin(); it != iterator->val.end(); it++){
-            (*it)->execute();
+        std::tuple<int,int,int> bal = tuple_from_json(pt.get<std::string>("BallotNum"));
+        this->ballotNum = bal;
+
+        Block<std::vector<Operation*>>* iterator = this->blockChain->get_head();
+        for(int i = 0; i < tempSize; i++){
+            iterator = iterator->next;
         }
-        iterator = iterator->next;
+
+        while(iterator != NULL){
+            for(std::vector<Operation*>::iterator it = iterator->val.begin(); it != iterator->val.end(); it++){
+                (*it)->assign_server(this->server);
+                (*it)->execute();
+            }
+            iterator = iterator->next;
+        }
+
+        this->recover_cv.notify_one();
     }
 }
 
@@ -550,10 +560,11 @@ void PaxosDecorator::process_helper(std::string msgType, std::string msg){
 void PaxosDecorator::start_server(Server* s){
     if(this->networkStatus)
         return;
+
     this->server->start_server(s);
+    this->load_block();
     std::thread newThread (&PaxosDecorator::queue_check_thread, this);
     newThread.detach();
-    this->load_block();
 
     if(settings::DEBUG_FLAG)
         printf("DEBUG: Paxos Started\n");
@@ -576,6 +587,9 @@ int PaxosDecorator::new_request(Operation* val){
         printf("DEBUG: Receive New Request\n");
 
     if(!this->server->get_network_status()){
+        this->requestQueue->push(val);
+        this->empty_cv.notify_one();
+        this->save_request_queue();
         return 1;
     }
     this->requestQueue->push(val);

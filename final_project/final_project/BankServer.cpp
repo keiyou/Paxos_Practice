@@ -11,6 +11,7 @@
 
 BankServer::BankServer(int siteNumber, int networkSize, std::string configFile, int initial_balance): Server(siteNumber, networkSize, configFile){
     this->balance = initial_balance;
+    this->prebalance = initial_balance;
 
     if(settings::DEBUG_FLAG)
         printf("DEBUG: Construct Bank Server\n");
@@ -22,19 +23,23 @@ BankServer::~BankServer(){
 }
 
 
-int BankServer::get_balance(){
-    return this->balance;
+int BankServer::get_prebalance(){
+    return this->prebalance;
+}
+int BankServer::use_prebalance(int amount){
+    return this->prebalance -= amount;
 }
 
+
 void BankServer::transfer_money(int from, int to, int credit){
-    this->balance_lock.lock();
+    std::lock_guard<std::mutex> lk(this->balance_lock);
     if(this->siteNumber == from){
         this->balance -= credit;
     }
     if(this->siteNumber == to){
         this->balance += credit;
+        this->prebalance += credit;
     }
-    this->balance_lock.unlock();
 
     if(settings::DEBUG_FLAG)
         printf("DEBUG: Transfer Request Processed\n");

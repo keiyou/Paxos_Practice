@@ -20,12 +20,14 @@
 class BankServer: public Server {
 private:
     int balance;
+    int prebalance;
     std::mutex balance_lock;
 public:
     BankServer(int siteNumber, int networkSize, std::string configFile, int initial_balance);
     ~BankServer();
 
-    int get_balance();
+    int get_prebalance();
+    int use_prebalance(int amount);
     void transfer_money(int from, int to, int credit);
     void print_balance();
 };

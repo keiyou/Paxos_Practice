@@ -41,6 +41,7 @@ private:
     std::mutex idle;
     std::condition_variable empty_cv;
     std::condition_variable prop_cv;
+    std::condition_variable recover_cv;
 
     void queue_check_thread();
     int get_site_number();
