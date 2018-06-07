@@ -4,24 +4,11 @@ CXXFLAGS=-g -std=c++11 -Wall -pedantic
 objects = main.o Server.o BankServer.o  ServerDecorator.o PaxosDecorator.o Operation.o BankServerInterface.o Utility.o PaxosUtility.o
 
 server: $(objects)
-	$(CXX) -pthread -o server $(CXXFLAGS) $(objects)
+	$(CXX) -pthread -L/usr/include/boost/thread -o server $(CXXFLAGS) $(objects) -lboost_system -lboost_thread
 
-all: server server1 server2
-
-server1: main1.o Server.o BankServer.o  ServerDecorator.o PaxosDecorator.o Operation.o BankServerInterface.o Utility.o PaxosUtility.o
-	$(CXX) -pthread -o server1 main1.o Server.o BankServer.o  ServerDecorator.o PaxosDecorator.o Operation.o BankServerInterface.o Utility.o PaxosUtility.o
-
-server2: main2.o Server.o BankServer.o  ServerDecorator.o PaxosDecorator.o Operation.o BankServerInterface.o Utility.o PaxosUtility.o
-	$(CXX) -pthread -o server2 main2.o Server.o BankServer.o  ServerDecorator.o PaxosDecorator.o Operation.o BankServerInterface.o Utility.o PaxosUtility.o
 
 main.o: main.cpp Server.hpp BankServer.hpp PaxosDecorator.hpp BankServerInterface.hpp Utility.hpp
 	$(CXX) -c $(CXXFLAGS) main.cpp
-
-main1.o: main1.cpp Server.hpp BankServer.hpp PaxosDecorator.hpp BankServerInterface.hpp Utility.hpp
-	$(CXX) -c $(CXXFLAGS) main1.cpp
-
-main2.o: main2.cpp Server.hpp BankServer.hpp PaxosDecorator.hpp BankServerInterface.hpp Utility.hpp
-	$(CXX) -c $(CXXFLAGS) main2.cpp
 
 Server.o: Server.cpp Utility.hpp
 	$(CXX) -c $(CXXFLAGS) Server.cpp
