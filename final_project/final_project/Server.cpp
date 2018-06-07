@@ -172,6 +172,7 @@ Server::~Server(){
 
 
 void Server::start_server(Server* s){
+    this->shutDownFlag = false;
     this->networkStatus = true;
     std::thread newThread (&Server::listen_thread, s);
     newThread.detach();
