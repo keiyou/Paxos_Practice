@@ -105,6 +105,7 @@ void PaxosDecorator::queue_check_thread(){
         this->accepts = 0;
         this->accepted = false;
         this->prop = true;
+        this->success = true;
 
         std::lock_guard<std::mutex> lk(this->idle);
         if(settings::DEBUG_FLAG)
@@ -203,6 +204,8 @@ void PaxosDecorator::proposer_accept(std::string msg){
     if(receivedVal != ""){
         if(settings::DEBUG_FLAG)
             printf("DEBUG: Paxos Proposer AcceptVal Not Empty!\n");
+
+        this->success = false;
 
         std::tuple<int,int,int> b = tuple_from_json(pt.get<std::string>("BallotNum"));
         if(compare(this->highestNum, b)){
@@ -322,7 +325,7 @@ void PaxosDecorator::proposer_decision(std::string msg){
 
         this->server->broadcast(accepted);
 
-        if(std::get<1>(this->ballotNum) == this->server->get_site_number()){
+        if(success){
             for(std::vector<Operation*>::iterator it = this->myVal.begin(); it != this->myVal.end(); it++){
                 delete(*it);
                 this->requestQueue->pop();

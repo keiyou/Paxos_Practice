@@ -35,6 +35,7 @@ private:
     bool acked;
     bool accepted;
 
+    bool success;
     bool prop;
 
     std::mutex proposing;
