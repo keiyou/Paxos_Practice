@@ -159,7 +159,7 @@ void PaxosDecorator::accepter_ack(std::string msg){
         printf("DEBUG: Paxos Accepter Receive Prepare From Site:%d\n", site);
 
     if(compare(this->ballotNum, bal)){
-        std::get<0>(this->ballotNum) = std::get<0>(bal);
+        this->ballotNum = bal;
         boost::property_tree::ptree root;
         root.put("MessageType", "Paxos_Ack");
         root.put("Site", this->server->get_site_number());
@@ -201,17 +201,17 @@ void PaxosDecorator::proposer_accept(std::string msg){
     if(settings::DEBUG_FLAG)
         printf("DEBUG: Paxos Proposer Receive Ack From Site %d\n", site);
 
+    std::tuple<int,int,int> b = tuple_from_json(pt.get<std::string>("BallotNum"));
+
     if(receivedVal != ""){
         if(settings::DEBUG_FLAG)
             printf("DEBUG: Paxos Proposer AcceptVal Not Empty!\n");
 
         this->success = false;
-
-        std::tuple<int,int,int> b = tuple_from_json(pt.get<std::string>("BallotNum"));
         if(compare(this->highestNum, b)){
             highestNum = b;
             for(std::vector<Operation*>::iterator it = myVal.begin(); it != myVal.end(); it++){
-                // delete *it;
+                delete *it;
             }
 
             myVal = vector_from_json(receivedVal);
@@ -227,7 +227,7 @@ void PaxosDecorator::proposer_accept(std::string msg){
         boost::property_tree::ptree root;
         root.put("MessageType", "Paxos_Accept");
         root.put("Site", this->server->get_site_number());
-        root.put("BallotNum", tuple_to_json(this->ballotNum));
+        root.put("BallotNum", tuple_to_json(b));
         root.put("AcceptVal", vector_to_json(this->myVal));
 
         std::stringstream s;
@@ -313,8 +313,8 @@ void PaxosDecorator::proposer_decision(std::string msg){
         boost::property_tree::ptree root;
         root.put("MessageType", "Paxos_Decision");
         root.put("Site", this->server->get_site_number());
-        root.put("AcceptNum", tuple_to_json(this->ballotNum));
-        root.put("AcceptVal", vector_to_json(this->myVal));
+        root.put("AcceptNum", tuple_to_json(tuple_from_json(pt.get<std::string>("AcceptNum"))));
+        root.put("AcceptVal", vector_to_json(vector_from_json(pt.get<std::string>("AcceptVal"))));
 
         std::stringstream s;
         boost::property_tree::write_json(s, root, false);
