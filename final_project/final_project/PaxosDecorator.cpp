@@ -161,6 +161,10 @@ void PaxosDecorator::accepter_ack(std::string msg){
         printf("DEBUG: Paxos Accepter Receive Prepare From Site:%d\n", site);
 
     if(compare(this->ballotNum, bal)){
+        if(std::get<2>(this->ballotNum) > std::get<2>(bal)){
+            send_recovery(site);
+        }
+
         this->ballotNum = bal;
         boost::property_tree::ptree root;
         root.put("MessageType", "Paxos_Ack");
@@ -529,6 +533,8 @@ void PaxosDecorator::receive_recovery(std::string msg){
             iterator = iterator->next;
         }
     }
+    this->proposing = false;
+    this->prop_cv.notify_one();
     this->recover_cv.notify_one();
 }
 
@@ -578,7 +584,7 @@ void PaxosDecorator::start_server(Server* s){
         return;
 
     this->server->start_server(s);
-    std::chrono::seconds duration(3);
+    std::chrono::seconds duration(5);
     std::this_thread::sleep_for(duration);
     this->load_block();
     std::thread newThread (&PaxosDecorator::queue_check_thread, this);
