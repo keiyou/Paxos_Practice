@@ -159,7 +159,7 @@ void PaxosDecorator::accepter_ack(std::string msg){
         printf("DEBUG: Paxos Accepter Receive Prepare From Site:%d\n", site);
 
     if(compare(this->ballotNum, bal)){
-        this->ballotNum = bal;
+        std::get<0>(this->ballotNum) = std::get<0>(bal);
         boost::property_tree::ptree root;
         root.put("MessageType", "Paxos_Ack");
         root.put("Site", this->server->get_site_number());
@@ -211,7 +211,7 @@ void PaxosDecorator::proposer_accept(std::string msg){
         if(compare(this->highestNum, b)){
             highestNum = b;
             for(std::vector<Operation*>::iterator it = myVal.begin(); it != myVal.end(); it++){
-                delete *it;
+                // delete *it;
             }
 
             myVal = vector_from_json(receivedVal);
