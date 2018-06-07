@@ -329,7 +329,7 @@ void PaxosDecorator::proposer_decision(std::string msg){
 
         if(success){
             for(std::vector<Operation*>::iterator it = this->myVal.begin(); it != this->myVal.end(); it++){
-                delete(*it);
+                // delete(*it);
                 this->requestQueue->pop();
             }
             this->save_request_queue();

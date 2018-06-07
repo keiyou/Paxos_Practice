@@ -84,6 +84,10 @@ std::vector<Operation*> vector_from_json(std::string strJson){
     for(boost::property_tree::ptree::iterator it = vector.begin(); it != vector.end(); it++){
         Operation* val = Operation::from_json(it->second.data());
         v.push_back(val);
+
+        if(val == NULL){
+            std::cout << "WTFFFFFFFF!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
+        }
     }
 
     return v;
