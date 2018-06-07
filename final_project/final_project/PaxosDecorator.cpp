@@ -162,7 +162,7 @@ void PaxosDecorator::accepter_ack(std::string msg){
 
     if(compare(this->ballotNum, bal)){
         if(std::get<2>(this->ballotNum) > std::get<2>(bal)){
-            send_recovery(site);
+            send_recovery(msg);
         }
 
         this->ballotNum = bal;
