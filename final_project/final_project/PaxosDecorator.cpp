@@ -533,7 +533,7 @@ void PaxosDecorator::receive_recovery(std::string msg){
             iterator = iterator->next;
         }
     }
-    this->proposing = false;
+    this->prop = false;
     this->prop_cv.notify_one();
     this->recover_cv.notify_one();
 }
