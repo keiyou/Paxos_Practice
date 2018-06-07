@@ -204,19 +204,19 @@ void PaxosDecorator::proposer_accept(std::string msg){
         if(settings::DEBUG_FLAG)
             printf("DEBUG: Paxos Proposer AcceptVal Not Empty!\n");
 
-        for(std::vector<Operation*>::iterator it = acceptVal.begin(); it != acceptVal.end(); it++){
-            delete *it;
-        }
-
         std::tuple<int,int,int> b = tuple_from_json(pt.get<std::string>("BallotNum"));
         if(compare(this->highestNum, b)){
             highestNum = b;
+            for(std::vector<Operation*>::iterator it = myVal.begin(); it != myVal.end(); it++){
+                delete *it;
+            }
+
             myVal = vector_from_json(receivedVal);
         }
     }
 
     this->acks++;
-    if(!acked && this->acks >= (this->server->get_network_size()/2+1)){
+    if(!this->acked && this->acks >= (this->server->get_network_size()/2+1)){
         if(settings::DEBUG_FLAG)
             printf("DEBUG: Paxos Proposer Ack from Majority: %d\n", this->acks);
 
