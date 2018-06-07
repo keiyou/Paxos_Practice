@@ -211,7 +211,7 @@ void PaxosDecorator::proposer_accept(std::string msg){
         if(compare(this->highestNum, b)){
             highestNum = b;
             for(std::vector<Operation*>::iterator it = myVal.begin(); it != myVal.end(); it++){
-                delete *it;
+                // delete *it;
             }
 
             myVal = vector_from_json(receivedVal);
@@ -488,6 +488,12 @@ void PaxosDecorator::receive_recovery(std::string msg){
         exit(1);
     }
 
+
+    int site = std::stoi(pt.get<std::string>("Site"));
+    if(site == this->server->get_site_number()){
+        return;
+    }
+
     std::string strJson = pt.get<std::string>("BlockChain");
     BlockChain<std::vector<Operation*>>* b = chain_from_json(strJson);
 
@@ -515,9 +521,8 @@ void PaxosDecorator::receive_recovery(std::string msg){
             }
             iterator = iterator->next;
         }
-
-        this->recover_cv.notify_one();
     }
+    this->recover_cv.notify_one();
 }
 
 void PaxosDecorator::process_helper(std::string msgType, std::string msg){
