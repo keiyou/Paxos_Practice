@@ -8,6 +8,7 @@
 #include "PaxosUtility.hpp"
 #include "Utility.hpp"
 
+#define BOOST_SPIRIT_THREADSAFE
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/foreach.hpp>
@@ -124,15 +125,14 @@ LimitedQueue<Operation*>* queue_from_json(std::string strJson){
 }
 
 std::string chain_to_json(BlockChain<std::vector<Operation*>>* block){
-    boost::property_tree::ptree root, array;
+    boost::property_tree::ptree array;
     for(Block<std::vector<Operation*>> *i = block->get_head(); i != NULL; i = i->next){
         boost::property_tree::ptree temp;
         temp.put("", vector_to_json(i->val));
         array.push_back(std::make_pair("", temp));
     }
-    root.add_child("BlockChain", array);
     std::stringstream s;
-    boost::property_tree::write_json(s, root, false);
+    boost::property_tree::write_json(s, array, false);
     std::string out = s.str();
     return out;
 
@@ -150,7 +150,7 @@ BlockChain<std::vector<Operation*>>* chain_from_json(std::string strJson){
     }
 
     BlockChain<std::vector<Operation*>>* b = new BlockChain<std::vector<Operation*>>();
-    boost::property_tree::ptree array = pt.get_child("BlockChain");
+    boost::property_tree::ptree array = pt;
     for(boost::property_tree::ptree::iterator it = array.begin(); it != array.end(); it++){
         Block<std::vector<Operation*>>* temp = new Block<std::vector<Operation*>>();
         temp->val = vector_from_json(it->second.data());
