@@ -205,7 +205,7 @@ void PaxosDecorator::proposer_accept(std::string msg){
 
     std::tuple<int,int,int> b = tuple_from_json(pt.get<std::string>("BallotNum"));
 
-    if(receivedVal != ""){
+    if(receivedVal != "" && !this->acked){
         if(settings::DEBUG_FLAG)
             printf("DEBUG: Paxos Proposer AcceptVal Not Empty!\n");
 
