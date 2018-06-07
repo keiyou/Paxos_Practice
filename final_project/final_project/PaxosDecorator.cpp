@@ -324,6 +324,7 @@ void PaxosDecorator::proposer_decision(std::string msg){
 
         if(std::get<1>(this->ballotNum) == this->server->get_site_number()){
             for(std::vector<Operation*>::iterator it = this->myVal.begin(); it != this->myVal.end(); it++){
+                delete(*it);
                 this->requestQueue->pop();
             }
             this->save_request_queue();
@@ -349,7 +350,7 @@ void PaxosDecorator::learner_learn(std::string msg){
 
 
     std::tuple<int,int,int> b = tuple_from_json(pt.get<std::string>("AcceptNum"));
-    if(std::get<2>(b) < this->blockChain->get_size()){
+    if(std::get<2>(b) <= this->blockChain->get_size()){
         if(settings::DEBUG_FLAG)
             printf("DEBUG: Duplicate Decision, Ignore\n");
         return;
