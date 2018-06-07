@@ -26,6 +26,7 @@ private:
     void listen_thread();
     void read_network_config(std::string filename);
     void listen_helper(int fd);
+    void send_message_helper(int size, std::string msg);
 protected:
     int siteNumber;
     int networkSize;

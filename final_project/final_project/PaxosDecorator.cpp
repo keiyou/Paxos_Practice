@@ -355,14 +355,17 @@ void PaxosDecorator::learner_learn(std::string msg){
 
     this->acceptNum = std::make_tuple(0,0,0);
     this->acceptVal = std::vector<Operation*>();
-    this->prop = false;
-    this->prop_cv.notify_one();
-
+    if(this->success == true){
+        this->prop = false;
+        this->prop_cv.notify_one();
+    }
 
     std::tuple<int,int,int> b = tuple_from_json(pt.get<std::string>("AcceptNum"));
     if(std::get<2>(b) < this->blockChain->get_size()){
         if(settings::DEBUG_FLAG)
             printf("DEBUG: Duplicate Decision, Ignore\n");
+        this->prop = false;
+        this->prop_cv.notify_one();
         return;
     }
 
@@ -378,6 +381,7 @@ void PaxosDecorator::learner_learn(std::string msg){
 
     if(settings::DEBUG_FLAG)
         printf("DEBUG: New Block Appended\n");
+
 }
 
 
@@ -574,7 +578,7 @@ void PaxosDecorator::start_server(Server* s){
         return;
 
     this->server->start_server(s);
-    std::chrono::seconds duration(1);
+    std::chrono::seconds duration(3);
     std::this_thread::sleep_for(duration);
     this->load_block();
     std::thread newThread (&PaxosDecorator::queue_check_thread, this);

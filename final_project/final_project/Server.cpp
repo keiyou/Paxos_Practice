@@ -198,7 +198,13 @@ void Server::shut_down_server(){
 }
 
 void Server::send_message(int site, std::string msg){
+    std::chrono::seconds duration(settings::SIMULATE_DELAY);
+    std::this_thread::sleep_for(duration);
 
+    send_message_helper(site, msg);
+}
+
+void Server::send_message_helper(int site, std::string msg){
     if(!this->netFlags[site]){
         printf("DEBUG: Failed to Connect to the Server %d\n", site);
         return;
@@ -231,8 +237,6 @@ void Server::send_message(int site, std::string msg){
     if(settings::DEBUG_FLAG)
         printf("DEBUG: Connected to Server %d\n", site);
 
-    std::chrono::seconds duration(settings::SIMULATE_DELAY);
-    std::this_thread::sleep_for(duration);
 
     strncpy(buf, msg.c_str(), sizeof(buf));
     err = send (sockfd, buf, msg.size(), 0);
@@ -248,11 +252,13 @@ void Server::send_message(int site, std::string msg){
 }
 
 void Server::broadcast(std::string msg){
+    std::chrono::seconds duration(settings::SIMULATE_DELAY);
+    std::this_thread::sleep_for(duration);
     if(settings::DEBUG_FLAG)
         printf("DEBUG: BROADCAST\n");
     for(int i = 0; i < this->networkSize; i++){
-        std::thread newThread (&Server::send_message, this, i, msg);
-        newThread.detach();
+        this->send_message(i, msg);
+
     }
 }
 
