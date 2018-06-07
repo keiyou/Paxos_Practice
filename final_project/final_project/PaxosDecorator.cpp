@@ -351,6 +351,11 @@ void PaxosDecorator::learner_learn(std::string msg){
     if(settings::DEBUG_FLAG)
         printf("DEBUG: Paxos Learner Receive Decision From Site %d\n", site);
 
+    this->acceptNum = std::make_tuple(0,0,0);
+    this->acceptVal = std::vector<Operation*>();
+    this->prop = false;
+    this->prop_cv.notify_one();
+
 
     std::tuple<int,int,int> b = tuple_from_json(pt.get<std::string>("AcceptNum"));
     if(std::get<2>(b) < this->blockChain->get_size()){
@@ -371,11 +376,6 @@ void PaxosDecorator::learner_learn(std::string msg){
 
     if(settings::DEBUG_FLAG)
         printf("DEBUG: New Block Appended\n");
-
-    this->acceptNum = std::make_tuple(0,0,0);
-    this->acceptVal = std::vector<Operation*>();
-    this->prop = false;
-    this->prop_cv.notify_one();
 }
 
 
@@ -463,6 +463,7 @@ void PaxosDecorator::send_recovery(std::string msg){
 
     boost::property_tree::ptree root;
     root.put("MessageType", "Paxos_Recovery");
+    root.put("Site", this->server->get_site_number());
     root.put("BallotNum", tuple_to_json(this->ballotNum));
     root.put("BlockChain", chain_to_json(this->blockChain));
     std::stringstream s;
