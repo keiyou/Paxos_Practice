@@ -257,7 +257,7 @@ void Server::broadcast(std::string msg){
     if(settings::DEBUG_FLAG)
         printf("DEBUG: BROADCAST\n");
     for(int i = 0; i < this->networkSize; i++){
-        this->send_message(i, msg);
+        this->send_message_helper(i, msg);
 
     }
 }
