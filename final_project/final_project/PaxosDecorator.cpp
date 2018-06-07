@@ -350,7 +350,7 @@ void PaxosDecorator::learner_learn(std::string msg){
 
 
     std::tuple<int,int,int> b = tuple_from_json(pt.get<std::string>("AcceptNum"));
-    if(std::get<2>(b) <= this->blockChain->get_size()){
+    if(std::get<2>(b) < this->blockChain->get_size()){
         if(settings::DEBUG_FLAG)
             printf("DEBUG: Duplicate Decision, Ignore\n");
         return;
@@ -365,7 +365,7 @@ void PaxosDecorator::learner_learn(std::string msg){
     }
 
     this->blockChain->append(val);
-    std::get<2>(this->ballotNum)++;
+
     if(settings::DEBUG_FLAG)
         printf("DEBUG: New Block Appended\n");
 
