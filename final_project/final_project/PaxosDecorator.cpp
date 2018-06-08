@@ -584,7 +584,7 @@ void PaxosDecorator::start_server(Server* s){
         return;
 
     this->server->start_server(s);
-    std::chrono::seconds duration(5);
+    std::chrono::seconds duration(2);
     std::this_thread::sleep_for(duration);
     this->load_block();
     std::thread newThread (&PaxosDecorator::queue_check_thread, this);
