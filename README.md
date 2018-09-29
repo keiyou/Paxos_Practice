@@ -1,1 +1,1 @@
-# CS171
+# Paxos Practice
